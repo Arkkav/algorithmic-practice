@@ -212,29 +212,18 @@ are pictured on the board, each connecting two specific board squares. (Source W
 Your task is to make a simple class called SnakesLadders. The test cases will call the method play(die1, die2) independantly 
 of the state of the game or the player turn. The variables die1 and die2 are the die thrown in a turn and are both integers between 1 and 6. 
 The player will move the sum of die1 and die2.
-
 Rules
 1.  There are two players and both start off the board on square 0.
-
 2.  Player 1 starts and alternates with player 2.
-
 3.  You follow the numbers up the board in order 1=>100
-
 4.  If the value of both die are the same then that player will have another go.
-
 5.  Climb up ladders. The ladders on the game board allow you to move upwards and get ahead faster. If you land exactly on a square that shows an image of the bottom of a ladder, then you may move the player all the way up to the square at the top of the ladder. (even if you roll a double).
-
 6.  Slide down snakes. Snakes move you back on the board because you have to slide down them. If you land exactly at the top of a snake, slide move the player all the way to the square at the bottom of the snake or chute. (even if you roll a double).
-
 7.  Land exactly on the last square to win. The first person to reach the highest square on the board wins. But there's a twist! If you roll too high, your player "bounces" off the last square and moves back. You can only win by rolling the exact number needed to land on the last square. For example, if you are on square 98 and roll a five, move your game piece to 100 (two moves), then "bounce" back to 99, 98, 97 (three, four then five moves.)
-
 8.  If the Player rolled a double and lands on the finish square “100” without any remaining moves then the Player wins the game and does not have to roll again.
-
 Returns
 Return Player n Wins!. Where n is winning player that has landed on square 100 without any remainding moves left.
-
 Return Game over! if a player has won and another player tries to play.
-
 Otherwise return Player n is on square x. Where n is the current player and x is the sqaure they are currently on.
 """
 
@@ -287,9 +276,78 @@ class SnakesLadders():
 		return s
 
 # можно было Snakes и Ladders сделать в одном словаре и доставать по get
+#----------------------------------------------------------
+"""
+Implement a function that receives two IPv4 addresses, and returns the number of addresses between them (including the first one, excluding the last one).
+All inputs will be valid IPv4 addresses in the form of strings. The last address will always be greater than the first one.
+Examples
+ips_between("10.0.0.0", "10.0.0.50")  ==   50 
+ips_between("10.0.0.0", "10.0.1.0")   ==  256 
+ips_between("20.0.0.10", "20.0.1.0")  ==  246
+"""
+
+
+def ips_between(start, end):
+	# TODO
+	s = [int(i) for i in start.split('.')]
+	e = [int(i) for i in end.split('.')]
+	count = (e[0] - s[0]) * 256 ** 3 + (e[1] - s[1]) * 256 ** 2 + (e[2] - s[2]) * 256 + (e[3] - s[3])
+	return count
+#---------------------------------------------------------
+"""
+A rectangle with sides equal to even integers a and b is drawn on the Cartesian plane. Its center (the intersection point of its diagonals) coincides with the point (0, 0), but the sides of the rectangle are not parallel to the axes; instead, they are forming 45 degree angles with the axes.
+How many points with integer coordinates are located inside the given rectangle (including on its sides)?
+Example
+For a = 6 and b = 4, the output should be 23
+The following picture illustrates the example, and the 23 points are marked green.
+
+Input/Output
+[input] integer a
+A positive even integer.
+Constraints: 2 ≤ a ≤ 10000.
+[input] integer b
+A positive even integer.
+Constraints: 2 ≤ b ≤ 10000.
+[output] an integer
+The number of inner points with integer coordinates.
+"""
+def rectangle_rotation(a, b):
+	c = (b ** 2 / 2) ** 0.5
+	d = (a ** 2 / 2) ** 0.5
+	line1 = lambda x: x + c
+	line2 = lambda x: -x + d
+	# line3 = lambda x: x + d
+	# line4 = lambda x: -x - d
+	i = 0
+	count1 = 0
+	count2 = 0
+	f1 = True
+	f2 = True
+	while f1 or f2:
+		i += 0.5
+		y = line1(-i)
+		if y >= i:
+			count1 += 1
+		else:
+			f1 = False
+		y = line2(i)
+		if y >= i:
+			count2 += 1
+		else:
+			f2 = False
+	count = 1 + count1 + count2 + 2 * count1 * count2
+	if (count1 + count2) % 2 == 1:
+		count -= 1
+	return count
+
+# def rectangle_rotation(a, b):
+#   x=a//2**0.5
+#   y=b//2**0.5
+#   return x*2*y+x+y+1-((x-y)%2)
+
 
 def run():
-	print(calc_fuel(37))
+	print(rectangle_rotation(6,4))
 
 
 if __name__ == '__main__':
