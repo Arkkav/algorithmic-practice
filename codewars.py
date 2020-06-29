@@ -344,10 +344,215 @@ def rectangle_rotation(a, b):
 #   x=a//2**0.5
 #   y=b//2**0.5
 #   return x*2*y+x+y+1-((x-y)%2)
+#----------------------------------------------------------
+"""
+The language you will be using has no low level memory API, so for our simulation we will simply use an 
+array as the process address space. The memory manager constructor will accept an array
+(further referred to as memory) where blocks of indices will be allocated later.
+Memory Manager Contract
+allocate(size)
+allocate reserves a sequential block (sub-array) of size received as an argument in memory. 
+It should return the index of the first element in the allocated block, or throw an exception if there 
+is no block big enough to satisfy the requirements.
+
+release(pointer)
+release accepts an integer representing the start of the block allocated ealier, and frees that block. 
+If the released block is adjacent to a free block, they should be merged into a larger free block. 
+Releasing an unallocated block should cause an exception.
+
+write(pointer, value)
+To support testing this simulation our memory manager needs to support read/write functionality. 
+Only elements within allocated blocks may be written to. The write method accepts an index in memory and a value. 
+The value should be stored in memory at that index if it lies within an allocated block, or throw an exception 
+otherwise.
+
+read(pointer)
+This method is the counterpart to write. Only indices within allocated blocks may be read. 
+The read method accepts an index. If the index is within an allocated block, the value stored in memory at that 
+index should be returned, or an exception should be thrown otherwise.
+"""
+
+
+class MemoryManager:
+	__slots__ = ('memory', 'allocated', 'free', 'free_space', )
+
+	def __init__(self, memory):
+		"""
+		@constructor Creates a new memory manager for the provided array.
+		@param {memory} An array to use as the backing memory.
+		"""
+		self.memory = memory
+		self.allocated = []  # e.g. [(0, 2), (5, 7)] - allocated blocks start, end indices
+		self.free = [(0, len(memory) - 1)]  # e.g. [(3, 4)] - free blocks start, end indices
+		self.free_space = len(memory)
+
+	def allocate(self, size):
+		"""
+		Allocates a block of memory of requested size.
+		@param {number} size - The size of the block to allocate.
+		@returns {number} A pointer which is the index of the first location in the allocated block.
+		@raises If it is not possible to allocate a block of the requested size.
+		"""
+		if size > self.free_space:
+			raise OSError('Cannot allocate more memory than exists')
+		for i in self.free:
+			if size <= i[1] - i[0] + 1:
+				self.allocated.append((i[0], i[0] + size - 1))
+				self.free_space -= size
+				return i[0]
+		else:
+			raise OSError('Cannot allocate more memory than exists')
+
+	def release(self, pointer):
+		"""
+		Releases a previously allocated block of memory.
+		@param {number} pointer - The pointer to the block to release.
+		@raises If the pointer does not point to an allocated block.
+		"""
+		for id, item in enumerate(self.allocated):
+			if item[0] == pointer:
+				self.allocated.pop(id)
+				self.free_space += item[1] - item[0] + 1
+				return
+		else:
+			raise OSError('The pointer does not point to an allocated block.')
+
+	def read(self, pointer):
+		"""
+		Reads the value at the location identified by pointer
+		@param {number} pointer - The location to read.
+		@returns {number} The value at that location.
+		@raises If pointer is in unallocated memory.
+		"""
+		for i in self.allocated:
+			if i[0] <= pointer <= i[1]:
+				return self.memory[pointer]
+		else:
+			raise OSError('Pointer is in unallocated memory.')
+
+	def write(self, pointer, value):
+		"""
+		Writes a value to the location identified by pointer
+		@param {number} pointer - The location to write to.
+		@param {number} value - The value to write.
+		@raises If pointer is in unallocated memory.
+		"""
+		for i in self.allocated:
+			if i[0] <= pointer <= i[1]:
+				self.memory[pointer] = value
+				return
+		else:
+			raise OSError('should throw on write to allocated pointer + {}'.format(str(pointer)))
+
+#----------------------------------------------------------
+"""
+Consider the sequence U(n, x) = x + 2x**2 + 3x**3 + .. + nx**n where x is a real number and n a positive integer.
+When n goes to infinity and x has a correct value (ie x is in its domain of convergence D), U(n, x) goes to a finite 
+limit m depending on x.
+Usually given x we try to find m. Here we will try to find x (x real, 0 < x < 1) when m is given (m real, m > 0).
+Let us call solve the function solve(m) which returns x such as U(n, x) goes to m when n goes to infinity.
+
+Examples:
+solve(2.0) returns 0.5 since U(n, 0.5) goes to 2 when n goes to infinity.
+solve(8.0) returns 0.7034648345913732 since U(n, 0.7034648345913732) goes to 8 when n goes to infinity.
+Note:
+You pass the tests if abs(actual - expected) <= 1e-12
+"""
+
+
+def solve(m):
+	from math import fabs, sqrt
+	merr = 1e-12
+	a = m
+	b = -2 * m - 1
+	c = m
+	k = b / 2
+	d = k ** 2 - a * c
+	x1 = (-k + sqrt(d)) / a
+	x2 = (-k - sqrt(d)) / a
+
+	return x2
+
+# ----------------------------------------------------------
+
+
+"""
+We want to create an object with methods for various HTML elements: div, p, span and h1 for the sake of this Kata.
+
+These methods will wrap the passed-in string in the tag associated with each.
+
+format.div("foo")  # returns "<div>foo</div>"
+format.p("bar")  # returns "<p>bar</p>"
+format.span("fiz")  # returns "<span>fiz</span>"
+format.h1("buz")  # returns "<h1>buz</h1>"
+We also want to be able to add additional formatting by chaining our methods together.
+
+format.div.h1("FooBar")
+# "<div><h1>FooBar</h1><div>"
+
+format.div.p.span("FizBuz")
+# "<div><p><span>FizBuz</span></p></div>"
+and so on, as deep as we care to use.
+
+Multiple arguments should be concatenated and wrapped in the correct HTML formatting.
+
+format.div.h1("Foo", "Bar")
+# "<div><h1>FooBar</h1></div>"
+We should be able to store the created methods and reuse them.
+
+wrap_in_div = format.div
+wrap_in_div("Foo")    # "<div>Foo</div>"
+wrap_in_div.p("Bar")  # "<div><p>Bar</p></div>"
+
+wrap_in_div_h1 = format.div.h1
+wrap_in_div_h1("Far")  # "<div><h1>Far</h1></div>"
+wrap_in_div_h1.span("Bar")  # "<div><h1><span>Bar</span></h1></div>"
+And finally, we should be able to nest calls.
+
+format.div(
+	format.h1("Title"),
+	format.p(f"Paragraph with a {format.span('span')}.")
+)
+# returns "<div><h1>Title</h1><p>Paragraph with a <span>span</span>.</p></div>"
+"""
+
+
+class Format:
+	def __init__(self, func=None):
+		self.func = func
+		self.parent = None
+		self.string = ''
+
+	def __getattr__(self, item):
+		s = Format(item)
+		s.parent = self
+		return s
+
+	def __call__(self, *args):
+		return self.exec(''.join(args))
+
+	def exec(self, s):
+		if self.func == 'div':
+			self.string = '<div>' + s + '</div>'
+		if self.func == 'p':
+			self.string = '<p>' + s + '</p>'
+		if self.func == 'span':
+			self.string = '<span>' + s + '</span>'
+		if self.func == 'h1':
+			self.string = '<h1>' + s + '</h1>'
+		if self.parent is None:
+			return s
+		else:
+			return self.parent.exec(self.string)
 
 
 def run():
-	print(rectangle_rotation(6,4))
+	s = 'hello'
+	format = Format()
+	wrap_in_div = format.div.h1
+	print(wrap_in_div("regerg"))
+	print(format.div.h1("Foo", "Bar"))
+
 
 
 if __name__ == '__main__':
