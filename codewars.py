@@ -546,6 +546,15 @@ class Format:
 			return self.parent.exec(self.string)
 
 
+# id_=lambda *cnts: ''.join(cnts)
+#
+# class Tag:
+#     def __init__(self,f=id_):     self.func=f
+#     def __call__(self,*contents): return self.func(*contents)
+#     def __getattr__(self,tag):    return Tag(lambda *cnts: self(f'<{ tag }>{ "".join(cnts) }</{ tag }>'))
+#
+# Format=Tag()
+
 def run():
 	s = 'hello'
 	format = Format()
