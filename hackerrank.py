@@ -25,13 +25,6 @@ def weird_n():
     return s
 
 
-def
-
-
-
-
-
-
 if __name__ == '__main__':
     print(weird_n())
 
